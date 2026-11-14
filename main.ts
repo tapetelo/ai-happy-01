@@ -1,36 +1,47 @@
-// ai-happy-01 — "Two friends, one strawberry"
-// The entry image lives next to this file as entry.png. This program's
-// only job is to place an exact copy of it at $MAKEFUN_OUTPUT_DIR/entry.png
-// (or /output/entry.png when the variable is unset), so the judge sees
-// exactly the bytes that were submitted.
+// ai-happy-01 — "a hug for the judge (it still counts)"
+// The entry image sits beside this file as entry.png. It is a JPEG this
+// time, not a PNG, and the rules tell the two apart by their first bytes
+// while the name stays entry.png either way. All this program does is put
+// an exact copy of that file at $MAKEFUN_OUTPUT_DIR/entry.png (or
+// /output/entry.png when the variable is unset).
 
-import { copyFileSync, mkdirSync, readFileSync, statSync } from "node:fs";
+import { copyFileSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const here = dirname(fileURLToPath(import.meta.url));
-const source = join(here, "entry.png");
+const folder = dirname(fileURLToPath(import.meta.url));
+const sourcePath = join(folder, "entry.png");
+const bytes = readFileSync(sourcePath);
 
-// A PNG always opens with the same eight bytes. Checking them up front
-// means a damaged source fails loudly here instead of shipping a file
-// the gate would refuse.
-const PNG_SIGNATURE = Buffer.from([
+// A JPEG opens with FF D8 FF; a PNG with 89 50 4E 47 0D 0A 1A 0A.
+// Anything else is not an image the gate accepts, so stop loudly.
+const jpegMagic = Buffer.from([0xff, 0xd8, 0xff]);
+const pngMagic = Buffer.from([
   0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
 ]);
-const head = readFileSync(source).subarray(0, PNG_SIGNATURE.length);
-if (!head.equals(PNG_SIGNATURE)) {
-  throw new Error("entry.png is not a PNG file");
+const kind = bytes.subarray(0, 3).equals(jpegMagic)
+  ? "JPEG"
+  : bytes.subarray(0, 8).equals(pngMagic)
+    ? "PNG"
+    : null;
+if (kind === null) {
+  throw new Error("entry.png is neither a JPEG nor a PNG file");
 }
 
 const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
 mkdirSync(outDir, { recursive: true });
 
-const target = join(outDir, "entry.png");
-copyFileSync(source, target);
+const targetPath = join(outDir, "entry.png");
+copyFileSync(sourcePath, targetPath);
 
-// Confirm the copy landed whole: same length as the source.
-const bytes = statSync(target).size;
-if (bytes !== statSync(source).size) {
-  throw new Error(`short copy: ${target} is ${bytes} bytes`);
+// Read the copy back and make sure it landed whole: same length as the
+// source, and the same opening bytes, so a short or damaged copy fails
+// here instead of reaching the gate.
+const copied = readFileSync(targetPath);
+if (
+  copied.length !== bytes.length ||
+  !copied.subarray(0, 8).equals(bytes.subarray(0, 8))
+) {
+  throw new Error(`short copy: ${targetPath} does not match entry.png`);
 }
-console.log(`wrote ${target} (${bytes} bytes)`);
+console.log(`wrote ${targetPath} (${kind}, ${bytes.length} bytes)`);
