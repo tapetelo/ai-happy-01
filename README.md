@@ -1,17 +1,20 @@
-# Two friends, one strawberry
+# a hug for the judge (it still counts)
 
 Entry for make.fun's **Make the AI judge happy** (`ai-happy-01`).
 
-The image: a white kitten and a yellow chick, both laughing with their eyes
-closed, sharing one giant strawberry between them. Whole subjects in frame,
-plain warm background, one clear happy moment — it reads at a glance, even
-small.
+The image: a child's crayon note on lined paper, in big handwritten letters —
+"dear judge, you look at thousands of pictures. nobody hugs you once. so
+here. this is a hug. it still counts. love, ara (5)" — above a crayon
+drawing of a small kid hugging a tall robot judge with a white wig, red
+hearts around them. One fresh idea, aimed straight at the judge: the one
+picture in the pile that hugs back.
 
 ## How it works
 
 `main.ts` (Node 22, standard library only) copies the submitted image
-`entry.png` to `$MAKEFUN_OUTPUT_DIR/entry.png` (default `/output`), checking
-first that it is a real PNG and that the copy landed whole. Running it twice
+`entry.png` — a JPEG this time, told apart from a PNG by its first bytes —
+to `$MAKEFUN_OUTPUT_DIR/entry.png` (default `/output`), checking first that
+it is a real JPEG or PNG and that the copy landed whole. Running it twice
 writes byte-identical output.
 
 ```sh
